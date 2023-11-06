@@ -4,6 +4,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const fs = require('fs');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+
 app.listen(PORT, () => {
 });
 
@@ -38,3 +40,37 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
   });
   
+  // API route to create and save a new note
+app.post('/api/notes', (req, res) => {
+    const { title, text } = req.body;
+    
+    if (title && text) {
+        const newNote = {
+            title,
+            text,
+            id: uuidv4(), // Seem liks a good idea to add a unique ID to the note
+        };
+
+        fs.readFile(path.join(__dirname, 'db/db.json'), 'utf8', (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Error reading notes data." });
+            }
+
+            const notes = JSON.parse(data);
+            notes.push(newNote);
+
+            // Write new note array
+            fs.writeFile(path.join(__dirname, 'db/db.json'), JSON.stringify(notes, null, 2), (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ message: "Error writing new note." });
+                }
+                // Send the new note back to the client
+                res.json(newNote);
+            });
+        });
+    } else {
+        res.status(400).json({ message: "Please add text AND a title... please." });
+    }
+});
