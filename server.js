@@ -6,30 +6,20 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
-  
-
 // Set up Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Not working');
-});
-
 // serve the landing page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/notes.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
   });
 
-  // serve the notes page
-  app.get('/notes', (req, res) => {
+// serve the notes page
+app.get('/notes', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/notes.html'));
-  });
+    });
 
   // API route to retrieve/get notes
 app.get('/api/notes', (req, res) => {
@@ -105,3 +95,13 @@ app.delete('/api/notes/:id', (req, res) => {
         });
     });
 });
+
+// error handling
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Not working');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
