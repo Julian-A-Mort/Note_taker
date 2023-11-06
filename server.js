@@ -7,16 +7,23 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 app.listen(PORT, () => {
-});
+    console.log(`Server listening on port ${PORT}`);
+  });
+  
 
 // Set up Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Not working');
+});
 
 // serve the landing page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    res.sendFile(path.join(__dirname, 'public/notes.html'));
   });
 
   // serve the notes page
@@ -73,4 +80,28 @@ app.post('/api/notes', (req, res) => {
     } else {
         res.status(400).json({ message: "Please add text AND a title... please." });
     }
+});
+
+// API route for delete a note
+app.delete('/api/notes/:id', (req, res) => {
+    const noteId = req.params.id;
+
+    fs.readFile(path.join(__dirname, 'db/db.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Error reading notes data." });
+        }
+
+        let notes = JSON.parse(data);
+        notes = notes.filter(note => note.id !== noteId);
+
+        fs.writeFile(path.join(__dirname, 'db/db.json'), JSON.stringify(notes, null, 2), (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: "Error deleting note." });
+            }
+
+            res.json({ message: "Note deleted successfully." });
+        });
+    });
 });
